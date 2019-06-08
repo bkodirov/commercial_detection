@@ -1,8 +1,10 @@
+import glob
+from os import scandir
 from urllib import request, parse
 import m3u8
 import os
 
-from m3u8 import M3U8
+from src.demuxer import transportation_segment_demux
 
 BASE_EXAMPLES_PATH = os.path.abspath(os.path.join(os.getcwd(), '..', 'examples/'))
 
@@ -53,9 +55,15 @@ def retrieve_m3u8_object(base_url, uri):
     return m3u8.loads(variant_data)
 
 
+def demux_downloaded_files(output_folder: str, file_prefix: str):
+    for media_segment_path in glob.glob(os.path.join(output_folder, file_prefix + "*")):
+        transportation_segment_demux(media_segment_path)
+
+
 def generate_raw_stream(base_url, playlist_url, file_prefix, output_folder):
     media_playlist = retrieve_m3u8_object(base_url, playlist_url)
     download_hls_files(output_folder, file_prefix, base_url, media_playlist)
+    demux_downloaded_files(output_folder, file_prefix)
 
 
 def dump_stream(folder_name, url):
