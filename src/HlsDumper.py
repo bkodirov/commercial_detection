@@ -24,14 +24,6 @@ def main():
         print('----')
 
 
-# def read_data_from_disk(uri):
-#     with open(uri, 'r') as hls_playlist_data:
-#         data = hls_playlist_data.read()
-#     if not data:
-#         print("Couldn't parse playlist")
-#         raise Exception("Couldn't read data")
-#     return data
-
 def download_hls_files(folder_to_store, file_prefix, base_url, variant_hls):
     print("Started downloading playlist form ", base_url, "to", folder_to_store)
     for file in variant_hls.files:
