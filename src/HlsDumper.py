@@ -5,27 +5,14 @@ import m3u8
 import os
 
 import requests
+from m3u8 import Segment
 
 from src.demuxer import transportation_segment_demux
+from src.stream_decryptor import is_encrypted, decrypt_aes128cbc
 
 __http_session__ = requests.Session()
 
 BASE_EXAMPLES_PATH = os.path.abspath(os.path.join(os.getcwd(), '..', 'examples/'))
-
-
-def main():
-    with open('../examples/akamai/master.m3u8', 'r') as master_playlist:
-        data = master_playlist.read()
-    if not data:
-        print("Couldn't parse playlist")
-        return
-    # print(data)
-    m3u8_obj = m3u8.loads(data)
-    for variant in m3u8_obj.playlists:
-        # print(variant.uri)
-        for media in variant.media:
-            print(media)
-        print('----')
 
 
 def create_media_playlist_url(base_url, second_url):
@@ -39,30 +26,37 @@ def create_media_playlist_url(base_url, second_url):
 
 def download_hls_files(folder_to_store, file_prefix, base_url, variant_hls):
     print("Started downloading playlist form ", base_url, "to", folder_to_store)
-    for file in variant_hls.files:
-        file_uri = create_media_playlist_url(base_url, file)
-        print("fetching file", file_uri)
+    for segment_obj in variant_hls.segments:
+        segment_obj: Segment = segment_obj
+        file_uri = create_media_playlist_url(base_url, segment_obj.uri)
+        print("fetching segment_obj", file_uri)
         # TODO Handle result properly
-        file_destination = os.path.join(folder_to_store, file_prefix + os.path.split(file)[1])
+        file_destination = os.path.join(folder_to_store, file_prefix + os.path.split(segment_obj.uri)[1])
         print("final_destination ", file_destination)
         with __http_session__.request('GET', file_uri) as response:
+            media_segment_content = response.content
+            if is_encrypted(segment_obj):
+                with __http_session__.request('GET', segment_obj.key.uri) as key_response:
+                    media_segment_content = decrypt_aes128cbc(media_segment_content, key_response.content, segment_obj.key.iv)
+
             with open(file_destination, 'wb') as local_copy:
-                local_copy.write(response.content)
+                local_copy.write(media_segment_content)
 
 
 def retrieve_m3u8_object(base_url, uri):
     # TODO handle uri. It might be relative or absolute path
     try:
         variant_url = parse.urljoin(base_url, uri)
+        with __http_session__.request('GET', variant_url) as response:
+            variant_data = response.text
+        # TODO Handle result properly
+        print('---------------------')
+        # print(variant_data)
+        print('---------------------')
+        return m3u8.loads(variant_data)
     except Exception:
         print("Can not join", base_url, uri)
-    with __http_session__.request('GET', variant_url) as response:
-        variant_data = response.text
-    # TODO Handle result properly
-    print('---------------------')
-    print(variant_data)
-    print('---------------------')
-    return m3u8.loads(variant_data)
+
 
 
 def demux_downloaded_files(output_folder: str, file_prefix: str):
@@ -112,4 +106,9 @@ def dump_stream(folder_name, url):
 
 if __name__ == "__main__":
     # dump_stream("akamai2", 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8')
-    dump_stream("long", 'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8?hdnts=ip%3D74.90.241.179~st%3D1560135065~exp%3D1560221465~acl%3D%2F%2A~data%3D1560221465~hmac%3D0dcfd96488c74331281f4023117e4682864a1b6ddde952d5654ebbfbf0e1c118')
+    dump_stream("long",
+                'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3')
+'https://dvr.fubo.tv/cnbc/N0347/Keys/0ec8af3c82e9ce9ebc3ce13c94bcf151967c74b5.bin?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3'
+'https://dvr.fubo.tv/cnbc/N0347/VIDEO_0_7128000/1554281336_set_223/VIDEO_0_7128000_446873.ts?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3'
+
+'openssl aes-128-cbc -d -in segment.ts -out out.ts -K d390a2db34a2d48fe220a2af87c38066 -iv B562114D9F8267ABD6A99EABCC361BF5'
