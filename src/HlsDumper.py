@@ -108,6 +108,16 @@ def dump_stream(folder_name, url):
 
 if __name__ == "__main__":
     # dump_stream("akamai2", 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8')
+
+    """
+    Ads
+    1. 08:19 - 12:24
+    2. 18:36 - 21:54
+    3. 30:54 - 34:20
+    4. 43:25 - 46:04
+    5. 53:28 - 57:15
+    6. 1:00:00 - 
+    """
     dump_stream("long",
                 'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8??hdnts=ip%3D74.90.241.179~st%3D1560305407~exp%3D1560391807~acl%3D%2F%2A~data%3D1560391807~hmac%3D4c42e75b9189b5b6ebdda24efee10c1baa666b6e5ae9adec171dd3a824a81a7c')
 
