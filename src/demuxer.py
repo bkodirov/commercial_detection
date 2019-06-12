@@ -19,7 +19,7 @@ def transportation_segment_demux(file_path: str):
     print(o.decode('utf-8'))
     print(e.decode('utf-8'))
 
-    proc = Popen(video_extractor_cmd_str.split(), stdout=PIPE, stderr=PIPE)
-    o, e = proc.communicate()
-    print(o.decode('utf-8'))
-    print(e.decode('utf-8'))
+    # proc = Popen(video_extractor_cmd_str.split(), stdout=PIPE, stderr=PIPE)
+    # o, e = proc.communicate()
+    # print(o.decode('utf-8'))
+    # print(e.decode('utf-8'))

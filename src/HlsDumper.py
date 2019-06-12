@@ -9,6 +9,7 @@ from m3u8 import Segment
 
 from src.demuxer import transportation_segment_demux
 from src.stream_decryptor import is_encrypted, decrypt_aes128cbc
+from src.wav_processor import concat_audio
 
 __http_session__ = requests.Session()
 
@@ -37,7 +38,8 @@ def download_hls_files(folder_to_store, file_prefix, base_url, variant_hls):
             media_segment_content = response.content
             if is_encrypted(segment_obj):
                 with __http_session__.request('GET', segment_obj.key.uri) as key_response:
-                    media_segment_content = decrypt_aes128cbc(media_segment_content, key_response.content, segment_obj.key.iv)
+                    media_segment_content = decrypt_aes128cbc(media_segment_content, key_response.content,
+                                                              segment_obj.key.iv)
 
             with open(file_destination, 'wb') as local_copy:
                 local_copy.write(media_segment_content)
@@ -51,12 +53,11 @@ def retrieve_m3u8_object(base_url, uri):
             variant_data = response.text
         # TODO Handle result properly
         print('---------------------')
-        # print(variant_data)
+        print(variant_data)
         print('---------------------')
         return m3u8.loads(variant_data)
     except Exception:
         print("Can not join", base_url, uri)
-
 
 
 def demux_downloaded_files(output_folder: str, file_prefix: str):
@@ -68,6 +69,7 @@ def generate_raw_stream(base_url, playlist_url, file_prefix, output_folder):
     media_playlist = retrieve_m3u8_object(base_url, playlist_url)
     download_hls_files(output_folder, file_prefix, base_url, media_playlist)
     demux_downloaded_files(output_folder, file_prefix)
+    concat_audio(output_folder, media_playlist)
 
 
 def dump_stream(folder_name, url):
@@ -86,7 +88,7 @@ def dump_stream(folder_name, url):
         if not media_item or media_item.autoselect:
             desired_audio_playlist = media_item
 
-    high_bitrate_video_playlist_uri = None
+    high_bitrate_video_playlist_uri = url
     if not hls_playlist.is_variant:
         hls_playlist.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth)
         high_bitrate_video_playlist_uri = hls_playlist.playlists[-1].uri
@@ -100,15 +102,13 @@ def dump_stream(folder_name, url):
         generate_raw_stream(url, desired_audio_playlist.uri, "audio_", output_folder)
     else:
         print("There is no independent audio playlist")
-    # Store audio on the output folder
-    generate_raw_stream(url, high_bitrate_video_playlist_uri, "video_", output_folder)
+    # Store video on the output folder
+    generate_raw_stream(url, high_bitrate_video_playlist_uri, '', output_folder)
 
 
 if __name__ == "__main__":
     # dump_stream("akamai2", 'https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8')
     dump_stream("long",
-                'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3')
-'https://dvr.fubo.tv/cnbc/N0347/Keys/0ec8af3c82e9ce9ebc3ce13c94bcf151967c74b5.bin?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3'
-'https://dvr.fubo.tv/cnbc/N0347/VIDEO_0_7128000/1554281336_set_223/VIDEO_0_7128000_446873.ts?hdnts=ip%3D74.90.241.179~st%3D1560218288~exp%3D1560304688~acl%3D%2F%2A~data%3D1560304688~hmac%3D46783fd4887e5a74e37ce482958fc504425e10493cd7a18414d6ef449ed92db3'
+                'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8??hdnts=ip%3D74.90.241.179~st%3D1560305407~exp%3D1560391807~acl%3D%2F%2A~data%3D1560391807~hmac%3D4c42e75b9189b5b6ebdda24efee10c1baa666b6e5ae9adec171dd3a824a81a7c')
 
 'openssl aes-128-cbc -d -in segment.ts -out out.ts -K d390a2db34a2d48fe220a2af87c38066 -iv B562114D9F8267ABD6A99EABCC361BF5'
