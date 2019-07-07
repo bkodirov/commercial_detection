@@ -9,7 +9,7 @@ from m3u8 import Segment
 
 from src.demuxer import transportation_segment_demux
 from src.stream_decryptor import is_encrypted, decrypt_aes128cbc
-from src.wav_processor import concat_audio
+from src.audio_processor import concat_audio
 
 __http_session__ = requests.Session()
 
@@ -67,8 +67,8 @@ def demux_downloaded_files(output_folder: str, file_prefix: str):
 
 def generate_raw_stream(base_url, playlist_url, file_prefix, output_folder):
     media_playlist = retrieve_m3u8_object(base_url, playlist_url)
-    download_hls_files(output_folder, file_prefix, base_url, media_playlist)
-    demux_downloaded_files(output_folder, file_prefix)
+    # download_hls_files(output_folder, file_prefix, base_url, media_playlist)
+    # demux_downloaded_files(output_folder, file_prefix)
     concat_audio(output_folder, media_playlist)
 
 
@@ -88,12 +88,12 @@ def dump_stream(folder_name, url):
         if not media_item or media_item.autoselect:
             desired_audio_playlist = media_item
 
+    # high_bitrate_video_playlist_uri = url
+    # if not hls_playlist.is_variant:
+    #     hls_playlist.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth)
+    #     high_bitrate_video_playlist_uri = hls_playlist.playlists[-1].uri
+    # else:
     high_bitrate_video_playlist_uri = url
-    if not hls_playlist.is_variant:
-        hls_playlist.playlists.sort(key=lambda playlist: playlist.stream_info.bandwidth)
-        high_bitrate_video_playlist_uri = hls_playlist.playlists[-1].uri
-    else:
-        high_bitrate_video_playlist_uri = url
 
     output_folder = os.path.join(stream_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
@@ -119,6 +119,6 @@ if __name__ == "__main__":
     6. 1:00:00 - 
     """
     dump_stream("long",
-                'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8??hdnts=ip%3D74.90.241.179~st%3D1560305407~exp%3D1560391807~acl%3D%2F%2A~data%3D1560391807~hmac%3D4c42e75b9189b5b6ebdda24efee10c1baa666b6e5ae9adec171dd3a824a81a7c')
+                'https://dvr.fubo.tv/2019/04/24/N0347/010000-020100/media-8872332-sorted.m3u8??hdnts=ip%3D74.90.241.179~st%3D1560395357~exp%3D1560481757~acl%3D%2F%2A~data%3D1560481757~hmac%3D4940adca4ac3461bb941d27e0a1fb6e559fec396fb1c8b6fbcddbb871802832d')
 
 'openssl aes-128-cbc -d -in segment.ts -out out.ts -K d390a2db34a2d48fe220a2af87c38066 -iv B562114D9F8267ABD6A99EABCC361BF5'

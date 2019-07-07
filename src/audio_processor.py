@@ -36,6 +36,3 @@ def concat_audio(folder_path, variant_playlist: M3U8):
         output_wav.writeframes(chunk_reader.readframes(chunk_reader.getnframes()))
         chunk_reader.close()
     output_wav.close()
-
-    # audio_segment = AudioSegment.from_wav(path.join(folder_path, CONCAT_WAV))
-    # play(audio_segment)
