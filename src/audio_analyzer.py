@@ -107,5 +107,5 @@ if __name__ == "__main__":
     5. 53:28 - 57:15
     6. 1:00:00 - 
     """
-    show_wave_n_spec("/Users/beka/proj/commercial_detection/examples/long/output/test.wav")
+    show_wave_n_spec("/Users/bekakodirov/projects/pyplayer/examples/long/output/test.wav")
     # smooth_out("/Users/beka/proj/commercial_detection/examples/long/output/test.wav")
